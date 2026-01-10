@@ -1,6 +1,20 @@
 FAQ
 ==========================
 
+What does the pro version offer? Is the open source project still maintained?
+----------------------------------------------------------------------------
+
+Yes, the open source project is maintained as before.
+
+In the `pro version <https://impersonate.pro>`_, we provide:
+
+- weekly update of targets
+- profiles for mobile browsers and apps
+- some private detection fields
+- http/3 fingerprints and proxy support
+
+And, a better financial situation will help the open source version better maintained.
+
 Why does the JA3 fingerprints change for Chrome 110+ impersonation?
 ------
 
@@ -56,9 +70,11 @@ The simplest way is to turn off cert verification by ``verify=False``:
 ErrCode: 77, Reason: error setting certificate verify locations
 ------
 
-Install ``curl_cffi`` and its dependencies in a pure-ASCII path, i.e. no Chinese or any
-other characters out of the ASCII table in the path.
-
+On Windows, if your Python environment or CA bundle path contains non-ASCII characters
+(e.g. accents), libcurl may fail to open the CA file when passed as a narrow ``char*``.
+``curl_cffi`` now encodes file-path options (e.g. ``CAINFO``, ``PROXY_CAINFO``,
+``SSLCERT``) using the system's preferred ANSI code page on Windows to ensure correct
+file access. This fixes most occurrences of error 77.
 
 How to use with fiddler/charles to intercept content
 ------
@@ -129,23 +145,6 @@ See also:
 - `#5 <https://github.com/lexiforest/curl_cffi/issues/5>`_
 - `#48 <https://github.com/lexiforest/curl_cffi/issues/48>`_
 
-How to set proxy?
-------
-
-You can use the ``proxy`` parameter:
-
-.. code-block:: python
-
-    import curl_cffi
-
-    curl_cffi.get(url, proxy="http://user:pass@example.com:3128")
-
-You can also use the ``http_proxy``, ``https_proxy``, and ``ws_proxy``, ``wss_proxy``
-environment variables, respectively.
-
-For explanation of differences between ``http_proxy`` and ``https_proxy``, please see
-`#6 <https://github.com/lexiforest/curl_cffi/issues/6>`_.
-
 
 How to change the order of headers?
 ------
@@ -160,6 +159,7 @@ your own headers.
 
 
 How to deal with encoding/decoding errors?
+------------------------------------------
 
 Use ``chardet`` or ``cchardet``
 

@@ -296,6 +296,12 @@ def test_expect_header_omitted(server):
     assert "Expect" not in headers
 
 
+def test_accept_header_not_added(server):
+    r = requests.get(str(server.url.copy_with(path="/echo_headers")))
+    headers = r.json()
+    assert "Accept" not in headers
+
+
 def test_charset_parse(server):
     r = requests.get(str(server.url.copy_with(path="/gbk")))
     assert r.encoding == "gbk"
@@ -346,6 +352,33 @@ def test_cookies(server):
     )
     cookies = r.json()
     assert cookies["foo"] == "bar"
+
+
+def test_cookies_update_disabled(server):
+    s = requests.Session()
+
+    set_url = str(server.url.copy_with(path="/unique_cookie"))
+
+    r = s.get(set_url)
+    assert r.cookies["foo"] == s.cookies["foo"]
+    old_cookie = r.cookies["foo"]
+
+    # Let's start discarding cookies
+    s.discard_cookies = True
+    r = s.get(set_url)
+    assert r.cookies["foo"] != s.cookies["foo"]
+    assert old_cookie == s.cookies["foo"]
+
+    # The behavior can be reverted
+    s.discard_cookies = False
+    r = s.get(set_url)
+    assert r.cookies["foo"] == s.cookies["foo"]
+    old_cookie = r.cookies["foo"]
+
+    # Also works as request parameter
+    r = s.get(set_url, discard_cookies=True)
+    assert r.cookies["foo"] != s.cookies["foo"]
+    assert old_cookie == s.cookies["foo"]
 
 
 def test_secure_cookies(server):
@@ -447,14 +480,23 @@ def test_response_headers(server):
 
 
 def test_response_cookies(server):
-    r = requests.get(str(server.url.copy_with(path="/set_cookies")))
-    print(r.cookies)
+    s = requests.Session(cookies={"old": "bar"})
+    r = s.get(str(server.url.copy_with(path="/set_cookies")))
+
+    # set-cookies from response
     assert r.cookies["foo"] == "bar"
+    assert s.cookies["foo"] == "bar"
+
+    # session cookies not in response object
+    assert r.cookies.get("old") is None
+
+    # non-exist cookies
+    assert r.cookies.get("xxx") is None
 
 
 def test_elapsed(server):
     r = requests.get(str(server.url.copy_with(path="/slow_response")))
-    assert r.elapsed > 0.1
+    assert r.elapsed.total_seconds() > 0.1
 
 
 def test_reason(server):
@@ -538,11 +580,14 @@ def test_session_preset_cookies(server):
         str(server.url.copy_with(path="/echo_cookies")), cookies={"hello": "world"}
     )
     cookies = r.json()
+
     # old cookies should be persisted
     assert cookies["foo"] == "bar"
+
     # new cookies should be added
     assert cookies["hello"] == "world"
-    # XXX request cookies will always be added to the entire session
+
+    # XXX: request cookies will always be added to the entire session
     # request cookies should not be added to session cookiejar
     # assert s.cookies.get("hello") is None
 
@@ -617,7 +662,7 @@ def test_cookies_mislead_by_host(server):
     s.curl.setopt(CurlOpt.RESOLVE, ["example.com:8000:127.0.0.1"])
     s.cookies.set("foo", "bar")
     print("URL is: ", str(server.url))
-    # TODO replace hard-coded url with server.url.replace(host="example.com")
+    # TODO: replace hard-coded url with server.url.replace(host="example.com")
     r = s.get("http://example.com:8000", headers={"Host": "example.com"})
     r = s.get(str(server.url.copy_with(path="/echo_cookies")))
     assert r.json()["foo"] == "bar"
@@ -932,3 +977,28 @@ def test_response_ip_and_port(server):
     assert r.primary_port == 8000
     assert r.local_ip == "127.0.0.1"
     assert r.local_port != 0
+
+
+def test_http_version(server):
+    r = requests.get(str(server.url), http_version="v1")
+    assert r.status_code == 200
+
+
+def test_session_auto_raise_for_status_enabled(server):
+    """Test that Session automatically raises HTTPError for error status codes
+    when raise_for_status=True"""
+    s = requests.Session(raise_for_status=True)
+    try:
+        s.get(str(server.url.copy_with(path="/status/404")))
+        raise AssertionError("Should have raised HTTPError for 404")
+    except HTTPError as e:
+        assert e.response.status_code == 404  # type: ignore
+
+
+def test_session_auto_raise_for_status_disabled(server):
+    """Test that Session does NOT raise HTTPError when raise_for_status=False
+    (default)"""
+    s = requests.Session(raise_for_status=False)
+    r = s.get(str(server.url.copy_with(path="/status/404")))
+    assert r.status_code == 404
+    # Should not raise an exception

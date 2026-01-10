@@ -1,9 +1,9 @@
 # curl_cffi
 
-![PyPI - Downloads](https://img.shields.io/pypi/dm/curl-cffi)
+[![PyPI Downloads](https://static.pepy.tech/badge/curl-cffi/week)](https://pepy.tech/projects/curl-cffi)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/curl_cffi)
 [![PyPI version](https://badge.fury.io/py/curl-cffi.svg)](https://badge.fury.io/py/curl-cffi)
-[![Generic badge](https://img.shields.io/badge/Telegram%20Group-join-blue?logo=telegram)](https://t.me/+lL9n33eZp480MGM1)
+[![Generic badge](https://img.shields.io/badge/Telegram%20Group-join-blue?logo=telegram)](https://t.me/real_curl_cffi)
 [![Generic badge](https://img.shields.io/badge/Discord-join-purple?logo=blue)](https://discord.gg/kJqMHHgdn2)
 
 [Documentation](https://curl-cffi.readthedocs.io)
@@ -11,23 +11,28 @@
 Python binding for [curl-impersonate fork](https://github.com/lexiforest/curl-impersonate)
 via [cffi](https://cffi.readthedocs.io/en/latest/). For commercial support, visit [impersonate.pro](https://impersonate.pro).
 
-Unlike other pure python http clients like `httpx` or `requests`, `curl_cffi` can
-impersonate browsers' TLS/JA3 and HTTP/2 fingerprints. If you are blocked by some
+`curl_cffi` is the most popular Python binding for `curl`. Unlike other pure
+python http clients like `httpx` or `requests`, `curl_cffi` can impersonate
+browsers' TLS/JA3 and HTTP/2 fingerprints. If you are blocked by some
 website for no obvious reason, you can give `curl_cffi` a try.
 
 Python 3.9 is the minimum supported version since v0.10.
 
+## Recall.ai - API for meeting recordings
+
+<a href="https://www.recall.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=lexiforest-curl_cffi" target="_blank"><img src="https://cdn.prod.website-files.com/620d732b1f1f7b244ac89f0e/66b294e51ee15f18dd2b171e_recall-logo.svg" alt="Recall.ai" height="47" width="149"></a>
+
+If you’re looking for a meeting recording API, consider checking out [Recall.ai](https://www.recall.ai/?utm_source=github&utm_medium=sponsorship&utm_campaign=lexiforest-curl_cffi), an API that records Zoom, Google Meet, Microsoft Teams, in-person meetings, and more.
+
+## Residential Proxies
+
+<a href="https://www.thordata.com/?ls=github&lk=curl_cffi" target="_blank"><img src="https://raw.githubusercontent.com/lexiforest/curl_cffi/main/assets/thordata.png" alt="Thordata" height="126" width="240"></a>
+
+Thordata: A reliable and cost-effective proxy service provider. One-click collection of public network data, providing enterprises and developers with stable, efficient, and compliant global proxy IP services. Register for a free trial of [residential proxies](https://www.thordata.com/products/residential-proxies/?ls=github&lk=curl_cffi) and receive 2000 free SERP API calls.
+
 ## Sponsors
 
-<p align="center">
- Maintenance of this project is made possible by all the <a href="https://github.com/lexiforest/curl_cffi/graphs/contributors">contributors</a> and <a href="https://github.com/sponsors/lexiforest">sponsors</a>. If you'd like to sponsor this project and have your avatar or company logo appear below <a href="https://github.com/sponsors/lexiforest">click here</a>. 💖
-</p>
-
-------
-
-<a href="https://serpapi.com/" target="_blank"><img src="https://raw.githubusercontent.com/lexiforest/curl_cffi/main/assets/serpapi.png" alt="SerpAPI" height="67" width="63"></a>
-
-Scrape Google and other search engines from [SerpApi](https://serpapi.com/)'s fast, easy, and complete API. 0.66s average response time (≤ 0.5s for Ludicrous Speed Max accounts), 99.95% SLAs, pay for successful responses only.
+Maintenance of this project is made possible by all the <a href="https://github.com/lexiforest/curl_cffi/graphs/contributors">contributors</a> and <a href="https://github.com/sponsors/lexiforest">sponsors</a>. If you'd like to sponsor this project and have your avatar or company logo appear below <a href="https://github.com/sponsors/lexiforest">click here</a>. 💖
 
 ------
 
@@ -41,24 +46,42 @@ to register: https://yescaptcha.com/i/stfnIO
 
 ------
 
+<a href="https://hypersolutions.co/?utm_source=github&utm_medium=readme&utm_campaign=curl_cffi" target="_blank"><img src="https://raw.githubusercontent.com/lexiforest/curl_cffi/main/assets/hypersolutions.png" height="47" width="149"></a>
+
+TLS fingerprinting alone isn't enough for modern bot protection. [Hyper Solutions](https://hypersolutions.co?utm_source=github&utm_medium=readme&utm_campaign=curl_cffi) provides the missing piece - API endpoints that generate valid antibot tokens for:
+
+Akamai • DataDome • Kasada • Incapsula
+
+No browser automation. Just simple API calls that return the exact cookies and headers these systems require.
+
+🚀 [Get Your API Key](https://hypersolutions.co?utm_source=github&utm_medium=readme&utm_campaign=curl_cffi) | 📖 [Docs](https://docs.justhyped.dev) | 💬 [Discord](https://discord.gg/akamai)
+
+------
+
 ## Features
 
-- Supports JA3/TLS and http2 fingerprints impersonation, including recent browsers and custome fingerprints.
+- Supports JA3/TLS and http2 fingerprints impersonation, including recent browsers and custom fingerprints.
 - Much faster than requests/httpx, on par with aiohttp/pycurl, see [benchmarks](https://github.com/lexiforest/curl_cffi/tree/main/benchmark).
-- Mimics requests API, no need to learn another one.
+- Mimics the requests API, no need to learn another one.
 - Pre-compiled, so you don't have to compile on your machine.
 - Supports `asyncio` with proxy rotation on each request.
-- Supports http 2.0, which requests does not.
+- Supports http 2.0 & 3.0, which requests does not.
 - Supports websocket.
+- MIT licensed.
 
 ||requests|aiohttp|httpx|pycurl|curl_cffi|
 |---|---|---|---|---|---|
-|http2|❌|❌|✅|✅|✅|
+|http/2|❌|❌|✅|✅|✅|
+|http/3|❌|❌|❌|☑️<sup>1</sup>|✅<sup>2</sup>|
 |sync|✅|❌|✅|✅|✅|
 |async|❌|✅|✅|❌|✅|
 |websocket|❌|✅|❌|❌|✅|
 |fingerprints|❌|❌|❌|❌|✅|
 |speed|🐇|🐇🐇|🐇|🐇🐇|🐇🐇|
+
+Notes:
+1. For pycurl, you need an http/3 enabled libcurl to make it work, while curl_cffi packages libcurl-impersonate inside Python wheels.
+2. Since v0.11.4.
 
 ## Install
 
@@ -79,21 +102,16 @@ To install unstable version from GitHub:
     make preprocess
     pip install .
 
+On macOS, you may need to install the following dependencies:
+
+    brew install zstd nghttp2
+
 ## Usage
 
 `curl_cffi` comes with a low-level `curl` API and a high-level `requests`-like API.
 
 ### requests-like
 
-v0.9:
-
-```py
-from curl_cffi import requests
-
-r = requests.get("https://tls.browserleaks.com/json", impersonate="chrome")
-```
-
-v0.10:
 
 ```python
 import curl_cffi
@@ -132,16 +150,6 @@ r = curl_cffi.get("https://tls.browserleaks.com/json", impersonate="chrome", pro
 
 ### Sessions
 
-v0.9:
-
-```py
-from curl_cffi import requests
-
-s = requests.Session()
-```
-
-v0.10:
-
 ```python
 s = curl_cffi.Session()
 
@@ -167,17 +175,18 @@ If you don't want to look up the headers etc, by yourself, consider buying comme
 we have comprehensive browser fingerprints database for almost all the browser versions on various platforms.
 
 If you are trying to impersonate a target other than a browser, use `ja3=...` and `akamai=...`
-to specify your own customized fingerprints. See the [docs on impersonation](https://curl-cffi.readthedocs.io/en/latest/impersonate.html) for details.
+to specify your own customized fingerprints. See the [docs on impersonation](https://curl-cffi.readthedocs.io/en/latest/impersonate/_index.html) for details.
 
 |Browser|Open Source| Pro version|
 |---|---|---|
-|Chrome|chrome99, chrome100, chrome101, chrome104, chrome107, chrome110, chrome116<sup>[1]</sup>, chrome119 <sup>[1]</sup>, chrome120 <sup>[1]</sup>, chrome123 <sup>[3]</sup>, chrome124 <sup>[3]</sup>, chrome131 <sup>[4]</sup>, chrome133a <sup>[5][6]</sup>|chrome132, chrome134, chrome135|
+|Chrome|chrome99, chrome100, chrome101, chrome104, chrome107, chrome110, chrome116<sup>[1]</sup>, chrome119<sup>[1]</sup>, chrome120<sup>[1]</sup>, chrome123<sup>[3]</sup>, chrome124<sup>[3]</sup>, chrome131<sup>[4]</sup>, chrome133a<sup>[5][6]</sup>, chrome136<sup>[6]</sup>|chrome132, chrome134, chrome135|
 |Chrome Android| chrome99_android, chrome131_android <sup>[4]</sup>|chrome132_android, chrome133_android, chrome134_android, chrome135_android|
 |Chrome iOS|N/A|coming soon|
-|Safari|safari15_3 <sup>[2]</sup>, safari15_5 <sup>[2]</sup>, safari17_0 <sup>[1]</sup>,|coming soon|
-|Safari iOS| safari17_2_ios <sup>[1]</sup>, safari18_0 <sup>[4]</sup>, safari18_0_ios <sup>[4]</sup>|coming soon|
-|Firefox|firefox133 <sup>[5]</sup>, firefox135 <sup>[7]</sup>|coming soon|
+|Safari <sup>[7]</sup>|safari153 <sup>[2]</sup>, safari155 <sup>[2]</sup>, safari170 <sup>[1]</sup>, safari180 <sup>[4]</sup>, safari184 <sup>[6]</sup>, safari260 <sup>[8]</sup>|coming soon|
+|Safari iOS <sup>[7]</sup>| safari172_ios<sup>[1]</sup>, safari180_ios<sup>[4]</sup>, safari184_ios <sup>[6]</sup>, safari260_ios <sup>[8]</sup>|coming soon|
+|Firefox|firefox133<sup>[5]</sup>, firefox135<sup>[7]</sup>|coming soon|
 |Firefox Android|N/A|firefox135_android|
+|Tor|tor145 <sup>[7]</sup>|coming soon|
 |Edge|edge99, edge101|edge133, edge135|
 |Opera|N/A|coming soon|
 |Brave|N/A|coming soon|
@@ -191,6 +200,9 @@ Notes:
 5. Added in version `0.9.0`.
 6. The version postfix `-a`(e.g. `chrome133a`) means that this is an alternative version, i.e. the fingerprint has not been officially updated by browser, but has been observed because of A/B testing.
 5. Added in version `0.10.0`.
+6. Added in version `0.11.0`.
+7. Since `0.11.0`, the format `safari184_ios` is preferred over `safari18_4_ios`, both are supported, but the latter is quite confusing and hard to parse.
+8. Added in  `0.12.0`.
 
 ### Asyncio
 
@@ -221,6 +233,10 @@ async with AsyncSession() as s:
     results = await asyncio.gather(*tasks)
 ```
 
+For low-level APIs, Scrapy integration and other advanced topics, see the
+[docs](https://curl-cffi.readthedocs.io) for more details.
+
+
 ### WebSockets
 
 ```python
@@ -233,9 +249,6 @@ ws = WebSocket(on_message=on_message)
 ws.run_forever("wss://api.gemini.com/v1/marketdata/BTCUSD")
 ```
 
-For low-level APIs, Scrapy integration and other advanced topics, see the
-[docs](https://curl-cffi.readthedocs.io) for more details.
-
 ### Asyncio WebSockets
 
 ```python
@@ -245,9 +258,17 @@ from curl_cffi import AsyncSession
 async with AsyncSession() as s:
     ws = await s.ws_connect("wss://echo.websocket.org")
     await asyncio.gather(*[ws.send_str("Hello, World!") for _ in range(10)])
+    await ws.flush()
     async for message in ws:
         print(message)
+    await ws.close()
 ```
+
+## Ecosystem
+
+- Integrating with Scrapy: [divtiply/scrapy-curl-cffi](https://github.com/divtiply/scrapy-curl-cffi), [jxlil/scrapy-impersonate](https://github.com/jxlil/scrapy-impersonate) and [tieyongjie/scrapy-fingerprint](https://github.com/tieyongjie/scrapy-fingerprint).
+- Integrating with [requests](https://github.com/el1s7/curl-adapter), [httpx](https://github.com/vgavro/httpx-curl-cffi) as adapter.
+- Integrating with captcha resolvers: [YesCaptcha](https://yescaptcha.atlassian.net/wiki/spaces/YESCAPTCHA/overview). Please see the head area for promo code and link.
 
 ## Acknowledgement
 
@@ -257,3 +278,20 @@ async with AsyncSession() as s:
 - The synchronous WebSocket API is inspired by [websocket_client](https://github.com/websocket-client/websocket-client).
 - The asynchronous WebSocket API is inspired by [aiohttp](https://github.com/aio-libs/aiohttp).
 
+## Contributing
+
+When submitting an PR, please use a different branch other than `main` and check the
+"Allow edits by maintainers" box, so I can update your PR with lint or style fixes. Thanks!
+
+### AI Policy
+
+- Using AI is neither encouraged nor discouraged, use it by your own choice.
+- The bottom line here is that every line of code should be **reviewed by human**, and should be [proven to work](https://simonwillison.net/2025/Dec/18/code-proven-to-work/).
+- It's not guaranteed that AI will come up with the cleanest solution, you are responsible to guide it to the right way you know.
+- Fix any lint errors, make sure your code follows the established convention in this project.
+- LLM tends to generate extensive or none comments, revise the comments and make sure they are concise and helpful.
+- It's absolutely **not acceptable** to generate the entire PR summary by LLM. To communicate with other human, use words from a human.
+- The only acceptable exception is to fix grammar issues if you are not a native English speaker.
+- The essence here is to keep [Human in the loop](https://discourse.llvm.org/t/rfc-llvm-ai-tool-policy-human-in-the-loop/89159)
+
+You can even feed the policy above to your "copilot" to let it adjust the style for you. :P

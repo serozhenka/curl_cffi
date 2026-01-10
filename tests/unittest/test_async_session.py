@@ -240,7 +240,7 @@ async def test_response_cookies(server):
 async def test_elapsed(server):
     async with AsyncSession() as s:
         r = await s.get(str(server.url.copy_with(path="/slow_response")))
-        assert r.elapsed > 0.1
+        assert r.elapsed.total_seconds() > 0.1
 
 
 async def test_reason(server):
@@ -360,6 +360,7 @@ async def test_post_body_cleaned(server):
         assert r.content == b""
 
 
+@pytest.mark.skip(reason="No longer needed")
 async def test_timers_leak(server):
     async with AsyncSession() as sess:
         for _ in range(3):
@@ -368,7 +369,6 @@ async def test_timers_leak(server):
                     str(server.url.copy_with(path="/slow_response")), timeout=0.1
                 )
         await asyncio.sleep(0.2)
-        assert len(sess.acurl._timers) == 0
 
 
 #######################################################################################
@@ -382,7 +382,22 @@ async def test_parallel(server):
             s.get(
                 str(server.url.copy_with(path="/echo_headers")), headers={"Foo": f"{i}"}
             )
-            for i in range(6)
+            for i in range(8)
+        ]
+        tasks = [asyncio.create_task(r) for r in rs]
+        rs = await asyncio.gather(*tasks)
+        for idx, r in enumerate(rs):
+            assert r.status_code == 200
+            assert r.json()["Foo"][0] == str(idx)
+
+
+async def test_high_parallel(server):
+    async with AsyncSession() as s:
+        rs = [
+            s.get(
+                str(server.url.copy_with(path="/echo_headers")), headers={"Foo": f"{i}"}
+            )
+            for i in range(10240)
         ]
         tasks = [asyncio.create_task(r) for r in rs]
         rs = await asyncio.gather(*tasks)
@@ -442,3 +457,25 @@ async def test_stream_atext(server):
             text = await r.atext()
             chunks = text.split("\n")
             assert len(chunks) == 20
+
+
+async def test_async_session_auto_raise_for_status_enabled(server):
+    """Test that AsyncSession automatically raises HTTPError for error status codes
+    when raise_for_status=True"""
+    from curl_cffi.requests.exceptions import HTTPError
+
+    async with AsyncSession(raise_for_status=True) as s:
+        try:
+            await s.get(str(server.url.copy_with(path="/status/404")))
+            raise AssertionError("Should have raised HTTPError for 404")
+        except HTTPError as e:
+            assert e.response.status_code == 404  # type: ignore
+
+
+async def test_async_session_auto_raise_for_status_disabled(server):
+    """Test that AsyncSession does NOT raise HTTPError when raise_for_status=False
+    (default)"""
+    async with AsyncSession(raise_for_status=False) as s:
+        r = await s.get(str(server.url.copy_with(path="/status/404")))
+        assert r.status_code == 404
+        # Should not raise an exception

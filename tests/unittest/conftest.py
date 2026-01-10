@@ -1,19 +1,23 @@
 import asyncio
 import contextlib
+from dataclasses import dataclass
 import json
 import os
+import queue
 import threading
 import time
 import typing
 from asyncio import sleep
 from collections import defaultdict
 from urllib.parse import parse_qs
+from uuid import uuid4
 
 import proxy
 import pytest
 import trustme
 import uvicorn
 import websockets
+from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.serialization import (
     BestAvailableEncryption,
@@ -126,6 +130,8 @@ async def app(scope, receive, send):
         await hello_world_gbk(scope, receive, send)
     elif scope["path"].startswith("/windows1251"):
         await hello_world_windows1251(scope, receive, send)
+    elif scope["path"].startswith("/unique_cookie"):
+        await set_cookies_unique(scope, receive, send)
     elif scope["path"].startswith("http://"):
         await http_proxy(scope, receive, send)
     elif scope["method"] == "CONNECT":
@@ -420,6 +426,22 @@ async def delete_cookies(scope, receive, send):
     await send({"type": "http.response.body", "body": b"Hello, world!"})
 
 
+async def set_cookies_unique(scope, receive, send):
+    t = f"foo={str(uuid4())}"
+    print("Sending unique cookie:", t)
+    await send(
+        {
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [
+                [b"content-type", b"text/plain"],
+                [b"set-cookie", t.encode()],
+            ],
+        }
+    )
+    await send({"type": "http.response.body", "body": b"Hello, world!"})
+
+
 async def set_special_cookies(scope, receive, send):
     await send(
         {
@@ -594,29 +616,11 @@ class TestServer(Server):
             await self.startup()
 
 
-async def echo(websocket):
-    while True:
-        name = await websocket.recv()
-        if isinstance(name, bytes):
-            name = name.decode()
-        # print(f"<<< {name}")
-
-        await websocket.send(name)
-        # print(f">>> {name}")
-
-
-class TestWebsocketServer:
-    def __init__(self, port):
-        self.url = f"ws://127.0.0.1:{port}"
-        self.port = port
-
-    def run(self):
-        async def serve(port):
-            # GitHub actions only likes 127, not localhost, wtf...
-            async with websockets.serve(echo, "127.0.0.1", port):  # pyright: ignore
-                await asyncio.Future()  # run forever
-
-        asyncio.run(serve(self.port))
+@pytest.fixture(scope="session")
+def server():
+    config = Config(app=app, lifespan="off", loop="asyncio")
+    server = TestServer(config=config)
+    yield from serve_in_thread(server)
 
 
 def serve_in_thread(server: Server):
@@ -632,26 +636,6 @@ def serve_in_thread(server: Server):
 
 
 @pytest.fixture(scope="session")
-def ws_server():
-    server = TestWebsocketServer(port=8964)
-    thread = threading.Thread(target=server.run, daemon=True)
-    thread.start()
-    try:
-        time.sleep(2)  # FIXME find a reliable way to check the server is up
-        yield server
-    finally:
-        pass
-        # thread.join()
-
-
-@pytest.fixture(scope="session")
-def server():
-    config = Config(app=app, lifespan="off", loop="asyncio")
-    server = TestServer(config=config)
-    yield from serve_in_thread(server)
-
-
-@pytest.fixture(scope="session")
 def https_server(cert_pem_file, cert_private_key_file):
     config = Config(
         app=app,
@@ -663,6 +647,72 @@ def https_server(cert_pem_file, cert_private_key_file):
     )
     server = TestServer(config=config)
     yield from serve_in_thread(server)
+
+
+async def echo(ws):
+    try:
+        async for msg in ws:
+            await ws.send(msg)
+    except (ConnectionClosedOK, ConnectionClosedError):
+        # Normal / abnormal close — nothing extra to do.
+        pass
+
+
+def start_ws_server(port: int = 8964):
+    """
+    Start a websockets server on 127.0.0.1:port in a background thread.
+    Returns (url, stop) where stop() shuts it down.
+    """
+    ready = threading.Event()
+    stop_callable_q: queue.Queue[typing.Callable] = queue.Queue()
+
+    def _thread_target():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        stop_async = asyncio.Event()
+
+        def _stop():
+            # can be called from main thread
+            loop.call_soon_threadsafe(stop_async.set)
+
+        async def _run():
+            async with websockets.serve(echo, "127.0.0.1", port) as _:
+                stop_callable_q.put(_stop)
+                ready.set()
+                await stop_async.wait()
+
+        try:
+            loop.run_until_complete(_run())
+        finally:
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            loop.close()
+
+    t = threading.Thread(target=_thread_target, daemon=True)
+    t.start()
+
+    # Wait until server is really listening and we have a stop() handle
+    stop = stop_callable_q.get()  # blocks until put()
+    ready.wait()  # the socket is bound now
+
+    url = f"ws://127.0.0.1:{port}"
+    return url, stop, t
+
+
+@dataclass
+class WSServer:
+    url: str
+    stop: typing.Callable
+
+
+@pytest.fixture(scope="session")
+def ws_server():
+    url, stop, thread = start_ws_server(port=8964)
+    try:
+        yield WSServer(url=url, stop=stop)
+    finally:
+        stop()  # trigger graceful shutdown
+        thread.join(5)  # optional: wait up to 5s for thread to exit
 
 
 @pytest.fixture(scope="session")
